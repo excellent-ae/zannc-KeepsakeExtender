@@ -1,6 +1,54 @@
+-- Scroll button data
+local keyMaxVisibleKeepsakes = _PLUGIN.guid .. "-MaxVisibleKeepsakes"
+local keyScrollOffset = _PLUGIN.guid .. "-ScrollOffset"
+local keyScrollUp = _PLUGIN.guid .. "-ScrollUp"
+local keyScrollDown = _PLUGIN.guid .. "-ScrollDown"
+
+local dataScrollUp = {
+	Graphic = "ButtonCodexUp",
+	GroupName = "Combat_Menu_Overlay",
+	X = 750,
+	Y = 120,
+	Alpha = 0.0,
+	Scale = 1,
+	InputBlockDuration = 0.02,
+	Data = {
+		OnPressedFunctionName = function(...)
+			return KeepsakeScrollUp(...)
+		end,
+		ControlHotkey = "MenuUp",
+	},
+}
+
+local dataScrollDown = {
+	Graphic = "ButtonCodexDown",
+	GroupName = "Combat_Menu_Overlay",
+	X = 750,
+	Y = 700,
+	Alpha = 0.0,
+	Scale = 1,
+	InputBlockDuration = 0.02,
+	Data = {
+		OnPressedFunctionName = function(...)
+			return KeepsakeScrollDown(...)
+		end,
+		ControlHotkey = "MenuDown",
+	},
+}
+
+local function initKeepsakeRackScreen(screen)
+	screen[keyMaxVisibleKeepsakes] = 33
+	screen[keyScrollOffset] = 0
+	screen.ComponentData[keyScrollUp] = DeepCopyTable(dataScrollUp)
+	screen.ComponentData[keyScrollDown] = DeepCopyTable(dataScrollDown)
+end
+
 function OpenKeepsakeRackScreen_override(base, source)
 	local screen = DeepCopyTable(ScreenData.KeepsakeRack)
 	screen.Source = source
+
+	initKeepsakeRackScreen(screen)
+
 	if IsScreenOpen(screen.Name) then
 		return
 	end
@@ -27,7 +75,7 @@ function OpenKeepsakeRackScreen_override(base, source)
 
 	screen.ActiveEntries = {}
 	screen.NumItems = 0
-	screen.ScrollOffset = 0
+	screen[keyScrollOffset] = 0
 	local numEntries = #screen.ItemOrder
 	wait(0.2)
 
@@ -70,21 +118,21 @@ function OpenKeepsakeRackScreen_override(base, source)
 end
 
 function KeepsakeScrollUp(screen, button)
-	if screen.ScrollOffset <= 0 then
+	if screen[keyScrollOffset] <= 0 then
 		return
 	end
-	screen.ScrollOffset = screen.ScrollOffset - screen.MaxVisibleKeepsakes
+	screen[keyScrollOffset] = screen[keyScrollOffset] - screen[keyMaxVisibleKeepsakes]
 	GenericScrollPresentation(screen, button)
 	KeepsakeUpdateVisibility(screen, { ScrolledUp = true })
 	wait(0.02)
-	TeleportCursor({ OffsetX = screen.StartX, OffsetY = screen.StartY + ((screen.MaxVisibleKeepsakes - 1) * screen.SpacerY), ForceUseCheck = true })
+	TeleportCursor({ OffsetX = screen.StartX, OffsetY = screen.StartY + ((screen[keyMaxVisibleKeepsakes] - 1) * screen.SpacerY), ForceUseCheck = true })
 end
 
 function KeepsakeScrollDown(screen, button)
-	if screen.ScrollOffset + screen.MaxVisibleKeepsakes >= screen.NumItems then
+	if screen[keyScrollOffset] + screen[keyMaxVisibleKeepsakes] >= screen.NumItems then
 		return
 	end
-	screen.ScrollOffset = screen.ScrollOffset + screen.MaxVisibleKeepsakes
+	screen[keyScrollOffset] = screen[keyScrollOffset] + screen[keyMaxVisibleKeepsakes]
 	GenericScrollPresentation(screen, button)
 	KeepsakeUpdateVisibility(screen, { ScrolledDown = true })
 	wait(0.02)
@@ -99,8 +147,8 @@ function KeepsakeUpdateVisibility(screen, args)
 	local offIds = {}
 	local rowMin = math.ceil(screen.RowMax / 2)
 
-	local startIndex = screen.ScrollOffset + 1
-	local endIndex = math.min(screen.ScrollOffset + screen.MaxVisibleKeepsakes, #screen.ActiveEntries)
+	local startIndex = screen[keyScrollOffset] + 1
+	local endIndex = math.min(screen[keyScrollOffset] + screen[keyMaxVisibleKeepsakes], #screen.ActiveEntries)
 
 	for index, buttonKey in ipairs(screen.ActiveEntries) do
 		local item = components[buttonKey]
@@ -193,20 +241,20 @@ function KeepsakeUpdateVisibility(screen, args)
 
 	-- Update scroll arrows
 	if not args.IgnoreArrows then
-		if screen.ScrollOffset <= 0 then
-			SetAlpha({ Id = components.ScrollUp.Id, Fraction = 0, Duration = 0.1 })
-			UseableOff({ Id = components.ScrollUp.Id, ForceHighlightOff = true })
+		if screen[keyScrollOffset] <= 0 then
+			SetAlpha({ Id = components[keyScrollUp].Id, Fraction = 0, Duration = 0.1 })
+			UseableOff({ Id = components[keyScrollUp].Id, ForceHighlightOff = true })
 		else
-			SetAlpha({ Id = components.ScrollUp.Id, Fraction = 1, Duration = 0.1 })
-			UseableOn({ Id = components.ScrollUp.Id })
+			SetAlpha({ Id = components[keyScrollUp].Id, Fraction = 1, Duration = 0.1 })
+			UseableOn({ Id = components[keyScrollUp].Id })
 		end
 
-		if screen.ScrollOffset + screen.MaxVisibleKeepsakes >= screen.NumItems then
-			SetAlpha({ Id = components.ScrollDown.Id, Fraction = 0, Duration = 0.1 })
-			UseableOff({ Id = components.ScrollDown.Id, ForceHighlightOff = true })
+		if screen[keyScrollOffset] + screen[keyMaxVisibleKeepsakes] >= screen.NumItems then
+			SetAlpha({ Id = components[keyScrollDown].Id, Fraction = 0, Duration = 0.1 })
+			UseableOff({ Id = components[keyScrollDown].Id, ForceHighlightOff = true })
 		else
-			SetAlpha({ Id = components.ScrollDown.Id, Fraction = 1, Duration = 0.1 })
-			UseableOn({ Id = components.ScrollDown.Id })
+			SetAlpha({ Id = components[keyScrollDown].Id, Fraction = 1, Duration = 0.1 })
+			UseableOn({ Id = components[keyScrollDown].Id })
 		end
 	end
 end

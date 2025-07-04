@@ -38,42 +38,14 @@ local function on_ready()
 		return
 	end
 
-	game.ScreenData.KeepsakeRack.MaxVisibleKeepsakes = 33
-	game.ScreenData.KeepsakeRack.ScrollOffset = 0
-
-	-- Scroll button data
-	game.ScreenData.KeepsakeRack.ComponentData.ScrollUp = {
-		Graphic = "ButtonCodexUp",
-		GroupName = "Combat_Menu_Overlay",
-		X = 750,
-		Y = 120,
-		Alpha = 0.0,
-		Scale = 1,
-		InputBlockDuration = 0.02,
-		Data = {
-			OnPressedFunctionName = "KeepsakeScrollUp",
-			ControlHotkey = "MenuUp",
-		},
-	}
-
-	game.ScreenData.KeepsakeRack.ComponentData.ScrollDown = {
-		Graphic = "ButtonCodexDown",
-		GroupName = "Combat_Menu_Overlay",
-		X = 750,
-		Y = 700,
-		Alpha = 0.0,
-		Scale = 1,
-		InputBlockDuration = 0.02,
-		Data = {
-			OnPressedFunctionName = "KeepsakeScrollDown",
-			ControlHotkey = "MenuDown",
-		},
-	}
-
 	import("ready.lua")
 end
 
 local function on_reload()
+	if config.enabled == false then
+		return
+	end
+
 	import("reload.lua")
 end
 
