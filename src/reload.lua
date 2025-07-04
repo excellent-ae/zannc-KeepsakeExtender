@@ -4,6 +4,10 @@ local keyScrollOffset = _PLUGIN.guid .. "-ScrollOffset"
 local keyScrollUp = _PLUGIN.guid .. "-ScrollUp"
 local keyScrollDown = _PLUGIN.guid .. "-ScrollDown"
 
+-- Using this outside a function to access it in Scroll
+local onIds = {}
+local offIds = {}
+
 local dataScrollUp = {
 	Graphic = "ButtonCodexUp",
 	GroupName = "Combat_Menu_Overlay",
@@ -41,6 +45,29 @@ local function initKeepsakeRackScreen(screen)
 	screen[keyScrollOffset] = 0
 	screen.ComponentData[keyScrollUp] = DeepCopyTable(dataScrollUp)
 	screen.ComponentData[keyScrollDown] = DeepCopyTable(dataScrollDown)
+end
+
+local function checkForEquippedKeepsake(screen)
+	if screen.LastTrait then
+		for _, buttonKey in ipairs(screen.ActiveEntries) do
+			local component = screen.Components[buttonKey]
+
+			local isVisible = false
+			for _, id in ipairs(onIds) do
+				if component.Id == id then
+					isVisible = true
+					break
+				end
+			end
+
+			if component and component.Data and component.Data.Gift == screen.LastTrait and isVisible then
+				SetSelectedFrame(screen, component, { Duration = 0.2 })
+				break
+			else
+				SetAlpha({ Id = screen.Components.EquippedFrame.Id, Fraction = 0.0, Duration = 0.1 })
+			end
+		end
+	end
 end
 
 function OpenKeepsakeRackScreen_override(base, source)
@@ -102,6 +129,8 @@ function OpenKeepsakeRackScreen_override(base, source)
 
 	KeepsakeUpdateVisibility(screen)
 
+	checkForEquippedKeepsake(screen)
+
 	if not screen.HasUnlocked then
 		TeleportCursor({ OffsetX = screen.StartX, OffsetY = screen.StartY, ForceUseCheck = true })
 		thread(PlayVoiceLines, GlobalVoiceLines.AwardMenuEmptyVoiceLines, false)
@@ -124,8 +153,11 @@ function KeepsakeScrollUp(screen, button)
 	screen[keyScrollOffset] = screen[keyScrollOffset] - screen[keyMaxVisibleKeepsakes]
 	GenericScrollPresentation(screen, button)
 	KeepsakeUpdateVisibility(screen, { ScrolledUp = true })
+
 	wait(0.02)
-	TeleportCursor({ OffsetX = screen.StartX, OffsetY = screen.StartY + ((screen[keyMaxVisibleKeepsakes] - 1) * screen.SpacerY), ForceUseCheck = true })
+	-- TeleportCursor({ OffsetX = screen.StartX, OffsetY = screen.StartY + ((screen[keyMaxVisibleKeepsakes] - 1) * screen.SpacerY), ForceUseCheck = true })
+
+	checkForEquippedKeepsake(screen)
 end
 
 function KeepsakeScrollDown(screen, button)
@@ -135,20 +167,32 @@ function KeepsakeScrollDown(screen, button)
 	screen[keyScrollOffset] = screen[keyScrollOffset] + screen[keyMaxVisibleKeepsakes]
 	GenericScrollPresentation(screen, button)
 	KeepsakeUpdateVisibility(screen, { ScrolledDown = true })
+
 	wait(0.02)
-	TeleportCursor({ OffsetX = screen.StartX, OffsetY = screen.StartY, ForceUseCheck = true })
+	-- TeleportCursor({ OffsetX = screen.StartX, OffsetY = screen.StartY, ForceUseCheck = true })
+
+	checkForEquippedKeepsake(screen)
 end
 
 function KeepsakeUpdateVisibility(screen, args)
 	args = args or {}
 	local components = screen.Components
 
-	local onIds = {}
-	local offIds = {}
 	local rowMin = math.ceil(screen.RowMax / 2)
+	onIds = {}
+	offIds = {}
 
 	local startIndex = screen[keyScrollOffset] + 1
 	local endIndex = math.min(screen[keyScrollOffset] + screen[keyMaxVisibleKeepsakes], #screen.ActiveEntries)
+
+	local componentOffsetList = {
+		Frame = { offsetx = 0, offsety = 10 },
+		Bar = { offsetx = 0, offsety = 80 },
+		BarFill = { offsetx = 0, offsety = 80 },
+		Rank = { offsetx = 0, offsety = screen.RankOffsetY },
+		Sticker = { offsetx = 30, offsety = -40 },
+		Lock = { offsetx = 0, offsety = 0 },
+	}
 
 	for index, buttonKey in ipairs(screen.ActiveEntries) do
 		local item = components[buttonKey]
@@ -160,74 +204,39 @@ function KeepsakeUpdateVisibility(screen, args)
 
 				-- TP the Keepsake Textures like selected texture
 				Teleport({ Id = item.Id, OffsetX = x, OffsetY = y })
-				if components[buttonKey .. "Frame"] then
-					Teleport({ Id = components[buttonKey .. "Frame"].Id, OffsetX = x, OffsetY = y + 10 })
+
+				for k, v in pairs(componentOffsetList) do
+					if components[buttonKey .. k] then
+						Teleport({ Id = components[buttonKey .. k].Id, OffsetX = x + v.offsetx, OffsetY = y + v.offsety })
+					end
 				end
-				if components[buttonKey .. "Bar"] then
-					Teleport({ Id = components[buttonKey .. "Bar"].Id, OffsetX = x, OffsetY = y + 80 })
-				end
-				if components[buttonKey .. "BarFill"] then
-					Teleport({ Id = components[buttonKey .. "BarFill"].Id, OffsetX = x, OffsetY = y + 80 })
-				end
-				if components[buttonKey .. "Rank"] then
-					Teleport({ Id = components[buttonKey .. "Rank"].Id, OffsetX = x, OffsetY = y + screen.RankOffsetY })
-				end
-				if components[buttonKey .. "Sticker"] then
-					Teleport({ Id = components[buttonKey .. "Sticker"].Id, OffsetX = x + 30, OffsetY = y - 40 })
-				end
+
 				if item.NewIcon then
 					Teleport({ Id = item.NewIcon.Id, OffsetX = x, OffsetY = y - 30 })
 				end
-				if components[buttonKey .. "Lock"] then
-					Teleport({ Id = components[buttonKey .. "Lock"].Id, OffsetX = x, OffsetY = y })
+
+				-- Add Keepsakes to list to be shown later
+				table.insert(onIds, item.Id)
+
+				for k, v in pairs(componentOffsetList) do
+					if components[buttonKey .. k] then
+						table.insert(onIds, components[buttonKey .. k].Id)
+					end
 				end
 
-				-- Show all
-				table.insert(onIds, item.Id)
-				if components[buttonKey .. "Frame"] then
-					table.insert(onIds, components[buttonKey .. "Frame"].Id)
-				end
-				if components[buttonKey .. "Bar"] then
-					table.insert(onIds, components[buttonKey .. "Bar"].Id)
-				end
-				if components[buttonKey .. "BarFill"] then
-					table.insert(onIds, components[buttonKey .. "BarFill"].Id)
-				end
-				if components[buttonKey .. "Rank"] then
-					table.insert(onIds, components[buttonKey .. "Rank"].Id)
-				end
-				if components[buttonKey .. "Sticker"] then
-					table.insert(onIds, components[buttonKey .. "Sticker"].Id)
-				end
 				if item.NewIcon then
 					table.insert(onIds, item.NewIcon.Id)
 				end
-				if components[buttonKey .. "Lock"] then
-					table.insert(onIds, components[buttonKey .. "Lock"].Id)
-				end
 			else
-				-- Hide keepsakes not on current page
+				-- Hide keepsakes by adding to list
 				table.insert(offIds, item.Id)
-				if components[buttonKey .. "Frame"] then
-					table.insert(offIds, components[buttonKey .. "Frame"].Id)
-				end
-				if components[buttonKey .. "Bar"] then
-					table.insert(offIds, components[buttonKey .. "Bar"].Id)
-				end
-				if components[buttonKey .. "BarFill"] then
-					table.insert(offIds, components[buttonKey .. "BarFill"].Id)
-				end
-				if components[buttonKey .. "Rank"] then
-					table.insert(offIds, components[buttonKey .. "Rank"].Id)
-				end
-				if components[buttonKey .. "Sticker"] then
-					table.insert(offIds, components[buttonKey .. "Sticker"].Id)
+				for k, v in pairs(componentOffsetList) do
+					if components[buttonKey .. k] then
+						table.insert(offIds, components[buttonKey .. k].Id)
+					end
 				end
 				if item.NewIcon then
 					table.insert(offIds, item.NewIcon.Id)
-				end
-				if components[buttonKey .. "Lock"] then
-					table.insert(offIds, components[buttonKey .. "Lock"].Id)
 				end
 			end
 		end
