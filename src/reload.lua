@@ -48,24 +48,24 @@ local function initKeepsakeRackScreen(screen)
 end
 
 local function checkForEquippedKeepsake(screen)
-	if screen.LastTrait then
-		for _, buttonKey in ipairs(screen.ActiveEntries) do
-			local component = screen.Components[buttonKey]
-
-			local isVisible = false
-			for _, id in ipairs(onIds) do
-				if component.Id == id then
-					isVisible = true
-					break
-				end
-			end
-
-			if component and component.Data and component.Data.Gift == screen.LastTrait and isVisible then
-				SetSelectedFrame(screen, component, { Duration = 0.2 })
+	if not screen.LastTrait then
+		return
+	end
+	for _, buttonKey in ipairs(screen.ActiveEntries) do
+		local component = screen.Components[buttonKey]
+		local isVisible = false
+		for _, id in ipairs(onIds) do
+			if component.Id == id then
+				isVisible = true
 				break
-			else
-				SetAlpha({ Id = screen.Components.EquippedFrame.Id, Fraction = 0.0, Duration = 0.1 })
 			end
+		end
+
+		if component and component.Data and component.Data.Gift == screen.LastTrait and isVisible then
+			SetSelectedFrame(screen, component, { Duration = 0.2 })
+			break
+		else
+			SetAlpha({ Id = screen.Components.EquippedFrame.Id, Fraction = 0.0, Duration = 0.1 })
 		end
 	end
 end
@@ -179,8 +179,7 @@ function KeepsakeUpdateVisibility(screen, args)
 	local components = screen.Components
 
 	local rowMin = math.ceil(screen.RowMax / 2)
-	onIds = {}
-	offIds = {}
+	onIds, offIds = {}, {}
 
 	local startIndex = screen[keyScrollOffset] + 1
 	local endIndex = math.min(screen[keyScrollOffset] + screen[keyMaxVisibleKeepsakes], #screen.ActiveEntries)
