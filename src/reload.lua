@@ -4,9 +4,7 @@ local keyScrollOffset = _PLUGIN.guid .. "-ScrollOffset"
 local keyScrollUp = _PLUGIN.guid .. "-ScrollUp"
 local keyScrollDown = _PLUGIN.guid .. "-ScrollDown"
 
--- Using this outside a function to access it in Scroll
-local onIds = {}
-local offIds = {}
+local activeKeepsakeIDs, disabledKeepsakeIDs = {}, {}
 
 local dataScrollUp = {
 	Graphic = "ButtonCodexUp",
@@ -47,21 +45,22 @@ local function initKeepsakeRackScreen(screen)
 	screen.ComponentData[keyScrollDown] = DeepCopyTable(dataScrollDown)
 end
 
-local function checkForEquippedKeepsake(screen)
+local function checkForCurrentKeepsake(screen)
 	if not screen.LastTrait then
 		return
 	end
+
 	for _, buttonKey in ipairs(screen.ActiveEntries) do
 		local component = screen.Components[buttonKey]
 		local isVisible = false
-		for _, id in ipairs(onIds) do
+		for _, id in ipairs(activeKeepsakeIDs) do
 			if component.Id == id then
 				isVisible = true
 				break
 			end
 		end
 
-		if component and component.Data and component.Data.Gift == screen.LastTrait and isVisible then
+		if component and component.Data and component.Data.Gift == (GameState.LastAwardTrait or screen.LastTrait) and isVisible then
 			SetSelectedFrame(screen, component, { Duration = 0.2 })
 			break
 		else
@@ -74,7 +73,7 @@ function OpenKeepsakeRackScreen_override(base, source)
 	local screen = DeepCopyTable(ScreenData.KeepsakeRack)
 	screen.Source = source
 
-	initKeepsakeRackScreen(screen)
+	initKeepsakeRackScreen(screen) -- !
 
 	if IsScreenOpen(screen.Name) then
 		return
@@ -82,10 +81,14 @@ function OpenKeepsakeRackScreen_override(base, source)
 	HideCombatUI(screen.Name)
 	OnScreenOpened(screen)
 	CreateScreenFromData(screen, screen.ComponentData)
+
+	UpdateFateStatus()
 	screen.LastTrait = GameState.LastAwardTrait
 	screen.StartingHasLastStand = HasLastStand(CurrentRun.Hero)
+
 	screen.StartingHealth = CurrentRun.Hero.MaxHealth
 	screen.StartingMana = CurrentRun.Hero.MaxMana
+	screen.StartingFateValid = PreRunIsFateValid()
 
 	local components = screen.Components
 
@@ -100,6 +103,7 @@ function OpenKeepsakeRackScreen_override(base, source)
 	screen.HasNew = false
 	screen.FirstUsable = false
 
+	-- start --
 	screen.ActiveEntries = {}
 	screen.NumItems = 0
 	screen[keyScrollOffset] = 0
@@ -129,7 +133,9 @@ function OpenKeepsakeRackScreen_override(base, source)
 
 	KeepsakeUpdateVisibility(screen)
 
-	checkForEquippedKeepsake(screen)
+	checkForCurrentKeepsake(screen)
+
+	-- end --
 
 	if not screen.HasUnlocked then
 		TeleportCursor({ OffsetX = screen.StartX, OffsetY = screen.StartY, ForceUseCheck = true })
@@ -146,40 +152,12 @@ function OpenKeepsakeRackScreen_override(base, source)
 	HandleScreenInput(screen)
 end
 
-function KeepsakeScrollUp(screen, button)
-	if screen[keyScrollOffset] <= 0 then
-		return
-	end
-	screen[keyScrollOffset] = screen[keyScrollOffset] - screen[keyMaxVisibleKeepsakes]
-	GenericScrollPresentation(screen, button)
-	KeepsakeUpdateVisibility(screen, { ScrolledUp = true })
-
-	wait(0.02)
-	-- TeleportCursor({ OffsetX = screen.StartX, OffsetY = screen.StartY + ((screen[keyMaxVisibleKeepsakes] - 1) * screen.SpacerY), ForceUseCheck = true })
-
-	checkForEquippedKeepsake(screen)
-end
-
-function KeepsakeScrollDown(screen, button)
-	if screen[keyScrollOffset] + screen[keyMaxVisibleKeepsakes] >= screen.NumItems then
-		return
-	end
-	screen[keyScrollOffset] = screen[keyScrollOffset] + screen[keyMaxVisibleKeepsakes]
-	GenericScrollPresentation(screen, button)
-	KeepsakeUpdateVisibility(screen, { ScrolledDown = true })
-
-	wait(0.02)
-	-- TeleportCursor({ OffsetX = screen.StartX, OffsetY = screen.StartY, ForceUseCheck = true })
-
-	checkForEquippedKeepsake(screen)
-end
-
-function KeepsakeUpdateVisibility(screen, args)
+local function KeepsakeUpdateVisibility(screen, args)
 	args = args or {}
+	activeKeepsakeIDs, disabledKeepsakeIDs = {}, {}
 	local components = screen.Components
 
 	local rowMin = math.ceil(screen.RowMax / 2)
-	onIds, offIds = {}, {}
 
 	local startIndex = screen[keyScrollOffset] + 1
 	local endIndex = math.min(screen[keyScrollOffset] + screen[keyMaxVisibleKeepsakes], #screen.ActiveEntries)
@@ -215,37 +193,36 @@ function KeepsakeUpdateVisibility(screen, args)
 				end
 
 				-- Add Keepsakes to list to be shown later
-				table.insert(onIds, item.Id)
+				table.insert(activeKeepsakeIDs, item.Id)
 
 				for k, v in pairs(componentOffsetList) do
 					if components[buttonKey .. k] then
-						table.insert(onIds, components[buttonKey .. k].Id)
+						table.insert(activeKeepsakeIDs, components[buttonKey .. k].Id)
 					end
 				end
 
 				if item.NewIcon then
-					table.insert(onIds, item.NewIcon.Id)
+					table.insert(activeKeepsakeIDs, item.NewIcon.Id)
 				end
 			else
-				-- Hide keepsakes by adding to list
-				table.insert(offIds, item.Id)
+				table.insert(disabledKeepsakeIDs, item.Id)
 				for k, v in pairs(componentOffsetList) do
 					if components[buttonKey .. k] then
-						table.insert(offIds, components[buttonKey .. k].Id)
+						table.insert(disabledKeepsakeIDs, components[buttonKey .. k].Id)
 					end
 				end
 				if item.NewIcon then
-					table.insert(offIds, item.NewIcon.Id)
+					table.insert(disabledKeepsakeIDs, item.NewIcon.Id)
 				end
 			end
 		end
 	end
 
-	SetAlpha({ Ids = onIds, Fraction = 1, Duration = 0.1 })
-	UseableOn({ Ids = onIds })
+	SetAlpha({ Ids = activeKeepsakeIDs, Fraction = 1, Duration = 0.1 })
+	UseableOn({ Ids = activeKeepsakeIDs })
 
-	SetAlpha({ Ids = offIds, Fraction = 0, Duration = 0.1 })
-	UseableOff({ Ids = offIds, ForceHighlightOff = true })
+	SetAlpha({ Ids = disabledKeepsakeIDs, Fraction = 0, Duration = 0.1 })
+	UseableOff({ Ids = disabledKeepsakeIDs, ForceHighlightOff = true })
 
 	-- Update scroll arrows
 	if not args.IgnoreArrows then
@@ -265,4 +242,30 @@ function KeepsakeUpdateVisibility(screen, args)
 			UseableOn({ Id = components[keyScrollDown].Id })
 		end
 	end
+end
+
+function KeepsakeScrollUp(screen, button)
+	if screen[keyScrollOffset] <= 0 then
+		return
+	end
+	screen[keyScrollOffset] = screen[keyScrollOffset] - screen[keyMaxVisibleKeepsakes]
+	GenericScrollPresentation(screen, button)
+	KeepsakeUpdateVisibility(screen, { ScrolledUp = true })
+
+	wait(0.02)
+
+	checkForCurrentKeepsake(screen)
+end
+
+function KeepsakeScrollDown(screen, button)
+	if screen[keyScrollOffset] + screen[keyMaxVisibleKeepsakes] >= screen.NumItems then
+		return
+	end
+	screen[keyScrollOffset] = screen[keyScrollOffset] + screen[keyMaxVisibleKeepsakes]
+	GenericScrollPresentation(screen, button)
+	KeepsakeUpdateVisibility(screen, { ScrolledDown = true })
+
+	wait(0.02)
+
+	checkForCurrentKeepsake(screen)
 end
