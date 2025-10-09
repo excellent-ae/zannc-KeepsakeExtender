@@ -69,89 +69,6 @@ local function checkForCurrentKeepsake(screen)
 	end
 end
 
-function OpenKeepsakeRackScreen_override(base, source)
-	local screen = DeepCopyTable(ScreenData.KeepsakeRack)
-	screen.Source = source
-
-	initKeepsakeRackScreen(screen) -- !
-
-	if IsScreenOpen(screen.Name) then
-		return
-	end
-	HideCombatUI(screen.Name)
-	OnScreenOpened(screen)
-	CreateScreenFromData(screen, screen.ComponentData)
-
-	UpdateFateStatus()
-	screen.LastTrait = GameState.LastAwardTrait
-	screen.StartingHasLastStand = HasLastStand(CurrentRun.Hero)
-
-	screen.StartingHealth = CurrentRun.Hero.MaxHealth
-	screen.StartingMana = CurrentRun.Hero.MaxMana
-	screen.StartingFateValid = PreRunIsFateValid()
-
-	local components = screen.Components
-
-	if GameState.LastAwardTrait ~= nil then
-		thread(MarkObjectiveComplete, "GiftRackPrompt")
-	end
-
-	screen.StartX = screen.StartX + ScreenCenterNativeOffsetX
-	screen.StartY = screen.StartY + ScreenCenterNativeOffsetY
-
-	screen.HasUnlocked = false
-	screen.HasNew = false
-	screen.FirstUsable = false
-
-	-- start --
-	screen.ActiveEntries = {}
-	screen.NumItems = 0
-	screen[keyScrollOffset] = 0
-	local numEntries = #screen.ItemOrder
-	wait(0.2)
-
-	for i = 1, numEntries do
-		local entryName = screen.ItemOrder[i]
-		local keepsakeData = GetKeepsakeData(entryName)
-
-		if keepsakeData ~= nil then
-			local itemData = {
-				New = GameState.NewKeepsakeItem[keepsakeData.GiftLevelData.Gift],
-				Gift = entryName,
-				Level = 1,
-				NPC = keepsakeData.NPCName,
-				Unlocked = SessionState.AllKeepsakeUnlocked or IsGameStateEligible(keepsakeData.GiftLevelData, keepsakeData.GiftLevelData.GameStateRequirements),
-			}
-
-			local buttonKey = "UpgradeToggle" .. i
-			CreateKeepsakeIcon(screen, components, { Index = i, UpgradeData = itemData, X = screen.StartX, Y = screen.StartY, Alpha = 0.0 })
-
-			screen.NumItems = screen.NumItems + 1
-			table.insert(screen.ActiveEntries, buttonKey)
-		end
-	end
-
-	KeepsakeUpdateVisibility(screen)
-
-	checkForCurrentKeepsake(screen)
-
-	-- end --
-
-	if not screen.HasUnlocked then
-		TeleportCursor({ OffsetX = screen.StartX, OffsetY = screen.StartY, ForceUseCheck = true })
-		thread(PlayVoiceLines, GlobalVoiceLines.AwardMenuEmptyVoiceLines, false)
-	elseif screen.HasNew then
-		thread(PlayVoiceLines, GlobalVoiceLines.AwardMenuNewAvailableVoiceLines, false)
-	else
-		thread(PlayVoiceLines, GlobalVoiceLines.OpenedAwardMenuVoiceLines, false)
-	end
-
-	SetAnimation({ DestinationId = CurrentRun.Hero.ObjectId, Name = "MelinoeEquip" })
-
-	screen.KeepOpen = true
-	HandleScreenInput(screen)
-end
-
 local function KeepsakeUpdateVisibility(screen, args)
 	args = args or {}
 	activeKeepsakeIDs, disabledKeepsakeIDs = {}, {}
@@ -242,6 +159,89 @@ local function KeepsakeUpdateVisibility(screen, args)
 			UseableOn({ Id = components[keyScrollDown].Id })
 		end
 	end
+end
+
+function OpenKeepsakeRackScreen_override(base, source)
+	local screen = DeepCopyTable(ScreenData.KeepsakeRack)
+	screen.Source = source
+
+	initKeepsakeRackScreen(screen) -- !
+
+	if IsScreenOpen(screen.Name) then
+		return
+	end
+	HideCombatUI(screen.Name)
+	OnScreenOpened(screen)
+	CreateScreenFromData(screen, screen.ComponentData)
+
+	UpdateFateStatus()
+	screen.LastTrait = GameState.LastAwardTrait
+	screen.StartingHasLastStand = HasLastStand(CurrentRun.Hero)
+
+	screen.StartingHealth = CurrentRun.Hero.MaxHealth
+	screen.StartingMana = CurrentRun.Hero.MaxMana
+	screen.StartingFateValid = PreRunIsFateValid()
+
+	local components = screen.Components
+
+	if GameState.LastAwardTrait ~= nil then
+		thread(MarkObjectiveComplete, "GiftRackPrompt")
+	end
+
+	screen.StartX = screen.StartX + ScreenCenterNativeOffsetX
+	screen.StartY = screen.StartY + ScreenCenterNativeOffsetY
+
+	screen.HasUnlocked = false
+	screen.HasNew = false
+	screen.FirstUsable = false
+
+	-- start --
+	screen.ActiveEntries = {}
+	screen.NumItems = 0
+	screen[keyScrollOffset] = 0
+	local numEntries = #screen.ItemOrder
+	wait(0.2)
+
+	for i = 1, numEntries do
+		local entryName = screen.ItemOrder[i]
+		local keepsakeData = GetKeepsakeData(entryName)
+
+		if keepsakeData ~= nil then
+			local itemData = {
+				New = GameState.NewKeepsakeItem[keepsakeData.GiftLevelData.Gift],
+				Gift = entryName,
+				Level = 1,
+				NPC = keepsakeData.NPCName,
+				Unlocked = SessionState.AllKeepsakeUnlocked or IsGameStateEligible(keepsakeData.GiftLevelData, keepsakeData.GiftLevelData.GameStateRequirements),
+			}
+
+			local buttonKey = "UpgradeToggle" .. i
+			CreateKeepsakeIcon(screen, components, { Index = i, UpgradeData = itemData, X = screen.StartX, Y = screen.StartY, Alpha = 0.0 })
+
+			screen.NumItems = screen.NumItems + 1
+			table.insert(screen.ActiveEntries, buttonKey)
+		end
+	end
+
+	KeepsakeUpdateVisibility(screen)
+
+	checkForCurrentKeepsake(screen)
+
+	-- end --
+
+	if not screen.HasUnlocked then
+		TeleportCursor({ OffsetX = screen.StartX, OffsetY = screen.StartY, ForceUseCheck = true })
+		thread(PlayVoiceLines, GlobalVoiceLines.AwardMenuEmptyVoiceLines, false)
+	elseif screen.HasNew then
+		thread(PlayVoiceLines, GlobalVoiceLines.AwardMenuNewAvailableVoiceLines, false)
+	else
+		thread(PlayVoiceLines, GlobalVoiceLines.OpenedAwardMenuVoiceLines, false)
+	end
+
+	SetAnimation({ DestinationId = CurrentRun.Hero.ObjectId, Name = "MelinoeEquip" })
+
+	screen.KeepOpen = true
+	HandleScreenInput(screen)
 end
 
 function KeepsakeScrollUp(screen, button)
