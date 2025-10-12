@@ -88,6 +88,20 @@ local function KeepsakeUpdateVisibility(screen, args)
 		Lock = { offsetx = 0, offsety = 0 },
 	}
 
+	local favouriteKeepsakeVisible = false
+	local favouriteButtonKey = nil
+
+	for index, buttonKey in ipairs(screen.ActiveEntries) do
+		local item = components[buttonKey]
+		if item ~= nil and game.GameState.SaveFirstKeepsakeName == item.Data.Gift then
+			if index >= startIndex and index <= endIndex then
+				favouriteKeepsakeVisible = true
+				favouriteButtonKey = buttonKey
+				break
+			end
+		end
+	end
+
 	for index, buttonKey in ipairs(screen.ActiveEntries) do
 		local item = components[buttonKey]
 
@@ -130,6 +144,14 @@ local function KeepsakeUpdateVisibility(screen, args)
 				end
 				if item.NewIcon then
 					table.insert(disabledKeepsakeIDs, item.NewIcon.Id)
+				end
+			end
+
+			if game.GameState.SaveFirstKeepsakeName == item.Data.Gift then
+				if favouriteKeepsakeVisible and buttonKey == favouriteButtonKey then
+					SetSaveFirstIcon(screen, components[buttonKey])
+				else
+					ClearSaveFirstIcon(screen, components[buttonKey])
 				end
 			end
 		end

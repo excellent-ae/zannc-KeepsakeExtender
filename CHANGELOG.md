@@ -1,6 +1,7 @@
 # Changelog
 
 ## [Unreleased]
+Hopefully fix the favourite pin not being positioned correctly.
 
 ## [1.0.0] - 2025-10-11
 
