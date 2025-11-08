@@ -61,8 +61,8 @@ local function checkForCurrentKeepsake(screen)
 		end
 
 		if component and component.Data and component.Data.Gift == (GameState.LastAwardTrait or screen.LastTrait) and isVisible then
-			SetSelectedFrame(screen, component, { Duration = 0.2 })
-			break
+			SetSelectedFrame(screen, component, { RestartAnimation = true })
+			KeepsakeScreenShowInfo(screen, screen.Components[buttonKey])
 		else
 			SetAlpha({ Id = screen.Components.EquippedFrame.Id, Fraction = 0.0, Duration = 0.1 })
 		end
@@ -128,7 +128,9 @@ local function KeepsakeUpdateVisibility(screen, args)
 
 				for k, v in pairs(componentOffsetList) do
 					if components[buttonKey .. k] then
-						table.insert(activeKeepsakeIDs, components[buttonKey .. k].Id)
+						if k ~= "Bar" and k ~= "BarFill" then
+							table.insert(activeKeepsakeIDs, components[buttonKey .. k].Id)
+						end
 					end
 				end
 
@@ -239,6 +241,14 @@ function OpenKeepsakeRackScreen_override(base, source)
 
 			local buttonKey = "UpgradeToggle" .. i
 			CreateKeepsakeIcon(screen, components, { Index = i, UpgradeData = itemData, X = screen.StartX, Y = screen.StartY, Alpha = 0.0 })
+
+			local button = components[buttonKey]
+			if button then
+				local stickerKey = buttonKey .. "Sticker"
+				if components[stickerKey] then
+					SetAlpha({ Id = components[stickerKey].Id, Fraction = 0.0, Duration = 0.0 })
+				end
+			end
 
 			screen.NumItems = screen.NumItems + 1
 			table.insert(screen.ActiveEntries, buttonKey)

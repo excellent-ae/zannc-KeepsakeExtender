@@ -1,14 +1,18 @@
 # Changelog
 
 ## [Unreleased]
+- Fix issue where stickers would blink right as you open the keepsake rack.
+- Fixed issue of missing animation when you originally open the keepsake rack
+- Fixed issue of Keepsake Data not appearing when you first open the rack.
+- Fixed issue where all the keepsake progress bars would be constantly showing.
 
 ## [1.0.1] - 2025-10-12
 
-Hopefully fix the favourite pin not being positioned correctly.
+- Hopefully fix the favourite pin not being positioned correctly.
 
 ## [1.0.0] - 2025-10-11
 
-Initial Release.
+- Initial Release.
 
 [unreleased]: https://github.com/excellent-ae/zannc-KeepsakeExtender/compare/1.0.1...HEAD
 [1.0.1]: https://github.com/excellent-ae/zannc-KeepsakeExtender/compare/1.0.0...1.0.1

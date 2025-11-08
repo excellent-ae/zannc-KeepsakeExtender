@@ -3,8 +3,8 @@
 
 local mods = rom.mods
 
----@module 'SGG_Modding-ENVY-auto'
-mods["SGG_Modding-ENVY"].auto()
+---@module 'LuaENVY-ENVY-auto'
+mods["LuaENVY-ENVY"].auto()
 
 rom = rom
 _PLUGIN = PLUGIN
