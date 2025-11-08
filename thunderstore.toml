@@ -5,7 +5,7 @@ schemaVersion = "0.0.1"
 [package]
 namespace = "zannc"
 name = "KeepsakeExtender"
-versionNumber = "1.0.1"
+versionNumber = "1.0.2"
 description = "Allows for the keepsake rack to hold more than 33 Keepsakes, important for creating new gods/keepsakes"
 websiteUrl = "https://github.com/excellent-ae/zannc-KeepsakeExtender"
 containsNsfwContent = false
@@ -36,7 +36,7 @@ target = "./plugins"
 
 [publish]
 repository = "https://thunderstore.io"
-communities = [ "hades-ii", ]
+communities = ["hades-ii"]
 
 [publish.categories]
-hades-ii = [ "mods", "tools" ]
+hades-ii = ["mods", "tools"]
