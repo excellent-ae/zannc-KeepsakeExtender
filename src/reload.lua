@@ -50,6 +50,8 @@ local function checkForCurrentKeepsake(screen)
 		return
 	end
 
+	local foundSelected = false
+
 	for _, buttonKey in ipairs(screen.ActiveEntries) do
 		local component = screen.Components[buttonKey]
 		local isVisible = false
@@ -61,10 +63,23 @@ local function checkForCurrentKeepsake(screen)
 		end
 
 		if component and component.Data and component.Data.Gift == (GameState.LastAwardTrait or screen.LastTrait) and isVisible then
+			TeleportCursor({ OffsetX = component.OffsetX, OffsetY = component.OffsetY, ForceUseCheck = true })
 			SetSelectedFrame(screen, component, { RestartAnimation = true })
 			KeepsakeScreenShowInfo(screen, screen.Components[buttonKey])
+			foundSelected = true
+			break
 		else
 			SetAlpha({ Id = screen.Components.EquippedFrame.Id, Fraction = 0.0, Duration = 0.1 })
+		end
+	end
+
+	if not foundSelected then
+		local firstVisibleIndex = math.min(screen[keyScrollOffset] + 1, #screen.ActiveEntries)
+		local firstButtonKey = screen.ActiveEntries[firstVisibleIndex]
+		local firstComponent = screen.Components[firstButtonKey]
+		if firstComponent then
+			TeleportCursor({ OffsetX = firstComponent.OffsetX, OffsetY = firstComponent.OffsetY, ForceUseCheck = true })
+			KeepsakeScreenShowInfo(screen, firstComponent)
 		end
 	end
 end
@@ -109,6 +124,9 @@ local function KeepsakeUpdateVisibility(screen, args)
 			if index >= startIndex and index <= endIndex then
 				local x = screen.StartX - screen.SpacerX * rowMin / 2 + ((index - 1) % screen.RowMax + 0.5) * screen.SpacerX
 				local y = screen.StartY + math.floor((index - startIndex) / screen.RowMax) * 2 * (screen.SpacerY / 2)
+
+				item.OffsetX = x
+				item.OffsetY = y
 
 				-- TP the Keepsake Textures like selected texture
 				Teleport({ Id = item.Id, OffsetX = x, OffsetY = y })
