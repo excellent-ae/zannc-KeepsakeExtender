@@ -5,7 +5,7 @@ schemaVersion = "0.0.1"
 [package]
 namespace = "zannc"
 name = "KeepsakeExtender"
-versionNumber = "1.0.2"
+versionNumber = "2.0.0"
 description = "Allows for the keepsake rack to hold more than 33 Keepsakes, important for creating new gods/keepsakes"
 websiteUrl = "https://github.com/excellent-ae/zannc-KeepsakeExtender"
 containsNsfwContent = false
