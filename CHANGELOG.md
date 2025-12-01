@@ -1,6 +1,9 @@
 # Changelog
 
 ## [Unreleased]
+
+## [2.0.0] - 2025-12-01
+
 - DEV: Use Lovely instead of overriding `OpenKeepsakeRack`
 - Fix issue with controller controls being unresponsive/unintuitive when opening the keepsake rack.
 - Fix issue with the scrolling through pages on controller.
@@ -20,7 +23,8 @@
 
 - Initial Release.
 
-[unreleased]: https://github.com/excellent-ae/zannc-KeepsakeExtender/compare/1.0.2...HEAD
+[unreleased]: https://github.com/excellent-ae/zannc-KeepsakeExtender/compare/2.0.0...HEAD
+[2.0.0]: https://github.com/excellent-ae/zannc-KeepsakeExtender/compare/1.0.2...2.0.0
 [1.0.2]: https://github.com/excellent-ae/zannc-KeepsakeExtender/compare/1.0.1...1.0.2
 [1.0.1]: https://github.com/excellent-ae/zannc-KeepsakeExtender/compare/1.0.0...1.0.1
 [1.0.0]: https://github.com/excellent-ae/zannc-KeepsakeExtender/compare/a2f739652a871af9fa88955de4f3dca44198e259...1.0.0
