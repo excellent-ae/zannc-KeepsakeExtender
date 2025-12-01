@@ -1,6 +1,9 @@
 # Changelog
 
 ## [Unreleased]
+- DEV: Use Lovely instead of overriding `OpenKeepsakeRack`
+- Fix issue with controller controls being unresponsive/unintuitive when opening the keepsake rack.
+- Fix issue with the scrolling through pages on controller.
 
 ## [1.0.2] - 2025-11-08
 

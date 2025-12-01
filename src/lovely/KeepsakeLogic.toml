@@ -1,0 +1,117 @@
+[manifest]
+version = "1.0.0"
+priority = 0
+
+[vars]
+env = "rom.mods['zannc-KeepsakeExtender'].lovely_env"
+
+[[patches]]
+[patches.pattern]
+target = "KeepsakeLogic.lua"
+pattern = '''
+function OpenKeepsakeRackScreen( source )
+	local screen = DeepCopyTable( ScreenData.KeepsakeRack )
+'''
+position = "after"
+payload = '''
+
+    local keyMaxVisibleKeepsakes = "zannc-KeepsakeExtender-MaxVisibleKeepsakes"
+    local keyScrollOffset = "zannc-KeepsakeExtender-ScrollOffset"
+    local keyActiveEntries = "zannc-KeepsakeExtender-ActiveEntries"
+    local keyNumItems = "zannc-KeepsakeExtender-NumItems"
+    local keyScrollUp = "zannc-KeepsakeExtender-ScrollUp"
+    local keyScrollDown = "zannc-KeepsakeExtender-ScrollDown"
+    local scrollArrowXPositions = { 158, 275, 390, 510, 620, 733, 850, 970, 1085, 1195, 1314 }
+
+    screen[keyMaxVisibleKeepsakes] = 33
+    screen[keyScrollOffset] = 0
+    screen[keyActiveEntries] = {}
+    screen[keyNumItems] = 0
+
+    for i, x in ipairs(scrollArrowXPositions) do
+        local upKey = keyScrollUp .. i
+        local downKey = keyScrollDown .. i
+
+        screen.ComponentData[upKey] = {{lovely:env}}.createScrollArrowData(x, true)
+        screen.ComponentData[downKey] = {{lovely:env}}.createScrollArrowData(x, false)
+
+        table.insert(screen.ComponentData.Order, upKey)
+        table.insert(screen.ComponentData.Order, downKey)
+    end
+
+'''
+match_indent = true
+times = 1
+
+[[patches]]
+[patches.pattern]
+target = "KeepsakeLogic.lua"
+pattern = '''
+	local rowMin = math.ceil( screen.RowMax / 2 )
+	screen.HasUnlocked = false
+	screen.HasNew = false
+	screen.FirstUsable = false
+	wait( 0.2 )
+	for itemIndex, itemName in ipairs( screen.ItemOrder ) do
+
+		local keepsakeData = GetKeepsakeData( itemName )
+		if keepsakeData ~= nil then
+			local itemData =
+			{
+				New = GameState.NewKeepsakeItem[keepsakeData.GiftLevelData.Gift],
+				Gift = itemName,
+				Level = 1,
+				NPC = keepsakeData.NPCName,
+				Unlocked = SessionState.AllKeepsakeUnlocked or IsGameStateEligible( keepsakeData.GiftLevelData, keepsakeData.GiftLevelData.GameStateRequirements )
+			}
+
+			local localx = 0
+			local localy = 0
+			localx = screen.StartX - screen.SpacerX * rowMin/2 + ((itemIndex - 1) % screen.RowMax + 0.5) * screen.SpacerX
+			localy = screen.StartY + math.floor( (itemIndex - 1) / screen.RowMax)* 2 * (screen.SpacerY / 2)
+			CreateKeepsakeIcon( screen, components, { Index = itemIndex, UpgradeData = itemData, X = localx, Y = localy } )
+		end
+	end
+    '''
+position = "at"
+payload = '''
+screen.HasUnlocked = false
+screen.HasNew = false
+screen.FirstUsable = false
+local numEntries = #screen.ItemOrder
+wait(0.2)
+
+for i = 1, numEntries do
+    local entryName = screen.ItemOrder[i]
+    local keepsakeData = GetKeepsakeData(entryName)
+
+    if keepsakeData ~= nil then
+        local itemData = {
+            New = GameState.NewKeepsakeItem[keepsakeData.GiftLevelData.Gift],
+            Gift = entryName,
+            Level = 1,
+            NPC = keepsakeData.NPCName,
+            Unlocked = SessionState.AllKeepsakeUnlocked or IsGameStateEligible(keepsakeData.GiftLevelData, keepsakeData.GiftLevelData.GameStateRequirements),
+        }
+
+        local buttonKey = "UpgradeToggle" .. i
+        CreateKeepsakeIcon(screen, components, { Index = i, UpgradeData = itemData, X = screen.StartX, Y = screen.StartY, Alpha = 0.0 })
+
+        local button = components[buttonKey]
+        if button then
+            local stickerKey = buttonKey .. "Sticker"
+            if components[stickerKey] then
+                SetAlpha({ Id = components[stickerKey].Id, Fraction = 0.0, Duration = 0.0 })
+            end
+        end
+
+        screen[keyNumItems] = screen[keyNumItems] + 1
+        table.insert(screen[keyActiveEntries], buttonKey)
+    end
+end
+
+{{lovely:env}}.KeepsakeUpdateVisibility(screen)
+{{lovely:env}}.checkForCurrentKeepsake(screen)
+'''
+match_indent = true
+times = 1

@@ -24,6 +24,7 @@ reload = mods["SGG_Modding-ReLoad"]
 ---@module 'KeepsakeExtender-zannc-config'
 config = chalk.auto("config.lua")
 public.config = config
+public.lovely_env = private
 
 import_as_fallback(rom.game)
 

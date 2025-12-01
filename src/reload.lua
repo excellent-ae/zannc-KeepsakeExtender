@@ -1,58 +1,41 @@
--- Scroll button data
-local keyMaxVisibleKeepsakes = _PLUGIN.guid .. "-MaxVisibleKeepsakes"
-local keyScrollOffset = _PLUGIN.guid .. "-ScrollOffset"
-local keyScrollUp = _PLUGIN.guid .. "-ScrollUp"
-local keyScrollDown = _PLUGIN.guid .. "-ScrollDown"
+local keyMaxVisibleKeepsakes = "zannc-KeepsakeExtender-MaxVisibleKeepsakes"
+local keyScrollOffset = "zannc-KeepsakeExtender-ScrollOffset"
+local keyActiveEntries = "zannc-KeepsakeExtender-ActiveEntries"
+local keyNumItems = "zannc-KeepsakeExtender-NumItems"
+local keyScrollUp = "zannc-KeepsakeExtender-ScrollUp"
+local keyScrollDown = "zannc-KeepsakeExtender-ScrollDown"
 
 local activeKeepsakeIDs, disabledKeepsakeIDs = {}, {}
+local scrollArrowXPositions = { 158, 275, 390, 510, 620, 733, 850, 970, 1085, 1195, 1314 }
 
-local dataScrollUp = {
-	Graphic = "ButtonCodexUp",
-	GroupName = "Combat_Menu_Overlay",
-	X = 750,
-	Y = 120,
-	Alpha = 0.0,
-	Scale = 1,
-	InputBlockDuration = 0.02,
-	Data = {
-		OnPressedFunctionName = function(...)
-			return KeepsakeScrollUp(...)
-		end,
-		ControlHotkey = "MenuUp",
-	},
-}
-
-local dataScrollDown = {
-	Graphic = "ButtonCodexDown",
-	GroupName = "Combat_Menu_Overlay",
-	X = 750,
-	Y = 700,
-	Alpha = 0.0,
-	Scale = 1,
-	InputBlockDuration = 0.02,
-	Data = {
-		OnPressedFunctionName = function(...)
-			return KeepsakeScrollDown(...)
-		end,
-		ControlHotkey = "MenuDown",
-	},
-}
-
-local function initKeepsakeRackScreen(screen)
-	screen[keyMaxVisibleKeepsakes] = 33
-	screen[keyScrollOffset] = 0
-	screen.ComponentData[keyScrollUp] = DeepCopyTable(dataScrollUp)
-	screen.ComponentData[keyScrollDown] = DeepCopyTable(dataScrollDown)
+function createScrollArrowData(x, isUpArrow)
+	return {
+		Graphic = isUpArrow and "ButtonCodexUp" or "ButtonCodexDown",
+		GroupName = "Combat_Menu_Overlay",
+		X = x,
+		Y = isUpArrow and 120 or 700,
+		Alpha = 0.0,
+		Scale = 1.0,
+		InputBlockDuration = 0.02,
+		Data = {
+			OnPressedFunctionName = isUpArrow and function(...)
+				return KeepsakeScrollUp(...)
+			end or function(...)
+				return KeepsakeScrollDown(...)
+			end,
+			ControlHotkey = isUpArrow and "MenuUp" or "MenuDown",
+		},
+	}
 end
 
-local function checkForCurrentKeepsake(screen)
+function checkForCurrentKeepsake(screen)
 	if not screen.LastTrait then
 		return
 	end
 
 	local foundSelected = false
 
-	for _, buttonKey in ipairs(screen.ActiveEntries) do
+	for _, buttonKey in ipairs(screen[keyActiveEntries]) do
 		local component = screen.Components[buttonKey]
 		local isVisible = false
 		for _, id in ipairs(activeKeepsakeIDs) do
@@ -74,8 +57,8 @@ local function checkForCurrentKeepsake(screen)
 	end
 
 	if not foundSelected then
-		local firstVisibleIndex = math.min(screen[keyScrollOffset] + 1, #screen.ActiveEntries)
-		local firstButtonKey = screen.ActiveEntries[firstVisibleIndex]
+		local firstVisibleIndex = math.min(screen[keyScrollOffset] + 1, #screen[keyActiveEntries])
+		local firstButtonKey = screen[keyActiveEntries][firstVisibleIndex]
 		local firstComponent = screen.Components[firstButtonKey]
 		if firstComponent then
 			TeleportCursor({ OffsetX = firstComponent.OffsetX, OffsetY = firstComponent.OffsetY, ForceUseCheck = true })
@@ -84,7 +67,7 @@ local function checkForCurrentKeepsake(screen)
 	end
 end
 
-local function KeepsakeUpdateVisibility(screen, args)
+function KeepsakeUpdateVisibility(screen, args)
 	args = args or {}
 	activeKeepsakeIDs, disabledKeepsakeIDs = {}, {}
 	local components = screen.Components
@@ -92,7 +75,7 @@ local function KeepsakeUpdateVisibility(screen, args)
 	local rowMin = math.ceil(screen.RowMax / 2)
 
 	local startIndex = screen[keyScrollOffset] + 1
-	local endIndex = math.min(screen[keyScrollOffset] + screen[keyMaxVisibleKeepsakes], #screen.ActiveEntries)
+	local endIndex = math.min(screen[keyScrollOffset] + screen[keyMaxVisibleKeepsakes], #screen[keyActiveEntries])
 
 	local componentOffsetList = {
 		Frame = { offsetx = 0, offsety = 10 },
@@ -106,9 +89,9 @@ local function KeepsakeUpdateVisibility(screen, args)
 	local favouriteKeepsakeVisible = false
 	local favouriteButtonKey = nil
 
-	for index, buttonKey in ipairs(screen.ActiveEntries) do
+	for index, buttonKey in ipairs(screen[keyActiveEntries]) do
 		local item = components[buttonKey]
-		if item ~= nil and game.GameState.SaveFirstKeepsakeName == item.Data.Gift then
+		if item ~= nil and GameState.SaveFirstKeepsakeName == item.Data.Gift then
 			if index >= startIndex and index <= endIndex then
 				favouriteKeepsakeVisible = true
 				favouriteButtonKey = buttonKey
@@ -117,7 +100,7 @@ local function KeepsakeUpdateVisibility(screen, args)
 		end
 	end
 
-	for index, buttonKey in ipairs(screen.ActiveEntries) do
+	for index, buttonKey in ipairs(screen[keyActiveEntries]) do
 		local item = components[buttonKey]
 
 		if item ~= nil then
@@ -167,7 +150,7 @@ local function KeepsakeUpdateVisibility(screen, args)
 				end
 			end
 
-			if game.GameState.SaveFirstKeepsakeName == item.Data.Gift then
+			if GameState.SaveFirstKeepsakeName == item.Data.Gift then
 				if favouriteKeepsakeVisible and buttonKey == favouriteButtonKey then
 					SetSaveFirstIcon(screen, components[buttonKey])
 				else
@@ -183,115 +166,53 @@ local function KeepsakeUpdateVisibility(screen, args)
 	SetAlpha({ Ids = disabledKeepsakeIDs, Fraction = 0, Duration = 0.1 })
 	UseableOff({ Ids = disabledKeepsakeIDs, ForceHighlightOff = true })
 
-	-- Update scroll arrows
 	if not args.IgnoreArrows then
-		if screen[keyScrollOffset] <= 0 then
-			SetAlpha({ Id = components[keyScrollUp].Id, Fraction = 0, Duration = 0.1 })
-			UseableOff({ Id = components[keyScrollUp].Id, ForceHighlightOff = true })
-		else
-			SetAlpha({ Id = components[keyScrollUp].Id, Fraction = 1, Duration = 0.1 })
-			UseableOn({ Id = components[keyScrollUp].Id })
-		end
+		local canScrollUp = screen[keyScrollOffset] > 0
+		local canScrollDown = screen[keyScrollOffset] + screen[keyMaxVisibleKeepsakes] < screen[keyNumItems]
 
-		if screen[keyScrollOffset] + screen[keyMaxVisibleKeepsakes] >= screen.NumItems then
-			SetAlpha({ Id = components[keyScrollDown].Id, Fraction = 0, Duration = 0.1 })
-			UseableOff({ Id = components[keyScrollDown].Id, ForceHighlightOff = true })
-		else
-			SetAlpha({ Id = components[keyScrollDown].Id, Fraction = 1, Duration = 0.1 })
-			UseableOn({ Id = components[keyScrollDown].Id })
-		end
-	end
-end
+		for i, x in ipairs(scrollArrowXPositions) do
+			local upKey = keyScrollUp .. i
+			local downKey = keyScrollDown .. i
 
-function OpenKeepsakeRackScreen_override(base, source)
-	local screen = DeepCopyTable(ScreenData.KeepsakeRack)
-	screen.Source = source
+			if x == 733 then
+				if components[upKey] then
+					if canScrollUp then
+						SetAlpha({ Id = components[upKey].Id, Fraction = 1.0, Duration = 0.1 })
+						UseableOn({ Id = components[upKey].Id })
+					else
+						SetAlpha({ Id = components[upKey].Id, Fraction = 0.3, Duration = 0.1 })
+						UseableOff({ Id = components[upKey].Id, ForceHighlightOff = true })
+					end
+				end
 
-	initKeepsakeRackScreen(screen) -- !
+				if components[downKey] then
+					if canScrollDown then
+						SetAlpha({ Id = components[downKey].Id, Fraction = 1.0, Duration = 0.1 })
+						UseableOn({ Id = components[downKey].Id })
+					else
+						SetAlpha({ Id = components[downKey].Id, Fraction = 0.3, Duration = 0.1 })
+						UseableOff({ Id = components[downKey].Id, ForceHighlightOff = true })
+					end
+				end
+			else
+				if components[upKey] then
+					if canScrollUp then
+						UseableOn({ Id = components[upKey].Id })
+					else
+						UseableOff({ Id = components[upKey].Id, ForceHighlightOff = true })
+					end
+				end
 
-	if IsScreenOpen(screen.Name) then
-		return
-	end
-	HideCombatUI(screen.Name)
-	OnScreenOpened(screen)
-	CreateScreenFromData(screen, screen.ComponentData)
-
-	UpdateFateStatus()
-	screen.LastTrait = GameState.LastAwardTrait
-	screen.StartingHasLastStand = HasLastStand(CurrentRun.Hero)
-
-	screen.StartingHealth = CurrentRun.Hero.MaxHealth
-	screen.StartingMana = CurrentRun.Hero.MaxMana
-	screen.StartingFateValid = PreRunIsFateValid()
-
-	local components = screen.Components
-
-	if GameState.LastAwardTrait ~= nil then
-		thread(MarkObjectiveComplete, "GiftRackPrompt")
-	end
-
-	screen.StartX = screen.StartX + ScreenCenterNativeOffsetX
-	screen.StartY = screen.StartY + ScreenCenterNativeOffsetY
-
-	screen.HasUnlocked = false
-	screen.HasNew = false
-	screen.FirstUsable = false
-
-	-- start --
-	screen.ActiveEntries = {}
-	screen.NumItems = 0
-	screen[keyScrollOffset] = 0
-	local numEntries = #screen.ItemOrder
-	wait(0.2)
-
-	for i = 1, numEntries do
-		local entryName = screen.ItemOrder[i]
-		local keepsakeData = GetKeepsakeData(entryName)
-
-		if keepsakeData ~= nil then
-			local itemData = {
-				New = GameState.NewKeepsakeItem[keepsakeData.GiftLevelData.Gift],
-				Gift = entryName,
-				Level = 1,
-				NPC = keepsakeData.NPCName,
-				Unlocked = SessionState.AllKeepsakeUnlocked or IsGameStateEligible(keepsakeData.GiftLevelData, keepsakeData.GiftLevelData.GameStateRequirements),
-			}
-
-			local buttonKey = "UpgradeToggle" .. i
-			CreateKeepsakeIcon(screen, components, { Index = i, UpgradeData = itemData, X = screen.StartX, Y = screen.StartY, Alpha = 0.0 })
-
-			local button = components[buttonKey]
-			if button then
-				local stickerKey = buttonKey .. "Sticker"
-				if components[stickerKey] then
-					SetAlpha({ Id = components[stickerKey].Id, Fraction = 0.0, Duration = 0.0 })
+				if components[downKey] then
+					if canScrollDown then
+						UseableOn({ Id = components[downKey].Id })
+					else
+						UseableOff({ Id = components[downKey].Id, ForceHighlightOff = true })
+					end
 				end
 			end
-
-			screen.NumItems = screen.NumItems + 1
-			table.insert(screen.ActiveEntries, buttonKey)
 		end
 	end
-
-	KeepsakeUpdateVisibility(screen)
-
-	checkForCurrentKeepsake(screen)
-
-	-- end --
-
-	if not screen.HasUnlocked then
-		TeleportCursor({ OffsetX = screen.StartX, OffsetY = screen.StartY, ForceUseCheck = true })
-		thread(PlayVoiceLines, GlobalVoiceLines.AwardMenuEmptyVoiceLines, false)
-	elseif screen.HasNew then
-		thread(PlayVoiceLines, GlobalVoiceLines.AwardMenuNewAvailableVoiceLines, false)
-	else
-		thread(PlayVoiceLines, GlobalVoiceLines.OpenedAwardMenuVoiceLines, false)
-	end
-
-	SetAnimation({ DestinationId = CurrentRun.Hero.ObjectId, Name = "MelinoeEquip" })
-
-	screen.KeepOpen = true
-	HandleScreenInput(screen)
 end
 
 function KeepsakeScrollUp(screen, button)
@@ -308,14 +229,12 @@ function KeepsakeScrollUp(screen, button)
 end
 
 function KeepsakeScrollDown(screen, button)
-	if screen[keyScrollOffset] + screen[keyMaxVisibleKeepsakes] >= screen.NumItems then
+	if screen[keyScrollOffset] + screen[keyMaxVisibleKeepsakes] >= screen[keyNumItems] then
 		return
 	end
 	screen[keyScrollOffset] = screen[keyScrollOffset] + screen[keyMaxVisibleKeepsakes]
 	GenericScrollPresentation(screen, button)
 	KeepsakeUpdateVisibility(screen, { ScrolledDown = true })
-
 	wait(0.02)
-
 	checkForCurrentKeepsake(screen)
 end
