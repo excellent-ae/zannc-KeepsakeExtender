@@ -23,7 +23,8 @@ function createScrollArrowData(x, isUpArrow)
 			end or function(...)
 				return KeepsakeScrollDown(...)
 			end,
-			ControlHotkey = isUpArrow and "MenuUp" or "MenuDown",
+			ControlHotkeys = isUpArrow and {"MenuUp", "MenuLeft"} or {"MenuDown", "MenuRight"},
+			MouseControlHotkeys = isUpArrow and {"MenuUp", } or {"MenuDown", },
 		},
 	}
 end
