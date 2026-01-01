@@ -111,7 +111,13 @@ for i = 1, numEntries do
 end
 
 {{lovely:env}}.KeepsakeUpdateVisibility(screen)
-{{lovely:env}}.checkForCurrentKeepsake(screen)
+local foundKeepsake = {{lovely:env}}.checkForCurrentKeepsake(screen)
+while not foundKeepsake and {{lovely:env}}.KeepsakeScrollDown(screen, button) do
+    foundKeepsake = {{lovely:env}}.checkForCurrentKeepsake(screen)
+end
+if not foundKeepsake then
+    while {{lovely:env}}.KeepsakeScrollUp(screen, button) do end
+end
 '''
 match_indent = true
 times = 1

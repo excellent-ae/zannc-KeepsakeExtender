@@ -66,6 +66,7 @@ function checkForCurrentKeepsake(screen)
 			KeepsakeScreenShowInfo(screen, firstComponent)
 		end
 	end
+	return foundSelected
 end
 
 function KeepsakeUpdateVisibility(screen, args)
@@ -218,7 +219,7 @@ end
 
 function KeepsakeScrollUp(screen, button)
 	if screen[keyScrollOffset] <= 0 then
-		return
+		return false
 	end
 	screen[keyScrollOffset] = screen[keyScrollOffset] - screen[keyMaxVisibleKeepsakes]
 	GenericScrollPresentation(screen, button)
@@ -227,15 +228,17 @@ function KeepsakeScrollUp(screen, button)
 	wait(0.02)
 
 	checkForCurrentKeepsake(screen)
+	return true
 end
 
 function KeepsakeScrollDown(screen, button)
 	if screen[keyScrollOffset] + screen[keyMaxVisibleKeepsakes] >= screen[keyNumItems] then
-		return
+		return false
 	end
 	screen[keyScrollOffset] = screen[keyScrollOffset] + screen[keyMaxVisibleKeepsakes]
 	GenericScrollPresentation(screen, button)
 	KeepsakeUpdateVisibility(screen, { ScrolledDown = true })
 	wait(0.02)
 	checkForCurrentKeepsake(screen)
+	return true
 end
