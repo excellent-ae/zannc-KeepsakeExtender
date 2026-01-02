@@ -3,7 +3,7 @@ version = "1.0.0"
 priority = 0
 
 [vars]
-env = "rom.mods['zannc-KeepsakeExtender'].lovely_env"
+zanncKeepsakeExtenderEnv = "rom.mods['zannc-KeepsakeExtender'].lovely_env"
 
 [[patches]]
 [patches.pattern]
@@ -32,8 +32,8 @@ payload = '''
         local upKey = keyScrollUp .. i
         local downKey = keyScrollDown .. i
 
-        screen.ComponentData[upKey] = {{lovely:env}}.createScrollArrowData(x, true)
-        screen.ComponentData[downKey] = {{lovely:env}}.createScrollArrowData(x, false)
+        screen.ComponentData[upKey] = {{lovely:zanncKeepsakeExtenderEnv}}.createScrollArrowData(x, true)
+        screen.ComponentData[downKey] = {{lovely:zanncKeepsakeExtenderEnv}}.createScrollArrowData(x, false)
 
         table.insert(screen.ComponentData.Order, upKey)
         table.insert(screen.ComponentData.Order, downKey)
@@ -110,13 +110,13 @@ for i = 1, numEntries do
     end
 end
 
-{{lovely:env}}.KeepsakeUpdateVisibility(screen)
-local foundKeepsake = {{lovely:env}}.checkForCurrentKeepsake(screen)
-while not foundKeepsake and {{lovely:env}}.KeepsakeScrollDown(screen, button) do
-    foundKeepsake = {{lovely:env}}.checkForCurrentKeepsake(screen)
+{{lovely:zanncKeepsakeExtenderEnv}}.KeepsakeUpdateVisibility(screen)
+local foundKeepsake = {{lovely:zanncKeepsakeExtenderEnv}}.checkForCurrentKeepsake(screen)
+while not foundKeepsake and {{lovely:zanncKeepsakeExtenderEnv}}.KeepsakeScrollDown(screen, button) do
+    foundKeepsake = {{lovely:zanncKeepsakeExtenderEnv}}.checkForCurrentKeepsake(screen)
 end
 if not foundKeepsake then
-    while {{lovely:env}}.KeepsakeScrollUp(screen, button) do end
+    while {{lovely:zanncKeepsakeExtenderEnv}}.KeepsakeScrollUp(screen, button) do end
 end
 '''
 match_indent = true

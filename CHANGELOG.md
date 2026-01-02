@@ -1,6 +1,9 @@
 # Changelog
 
 ## [Unreleased]
+Now opens the keepsake rack to the currently equipped keepsake - Github: adi1998
+Minor change to make controller scrolling easier. - Github: adi1998
+DEV: Lovely ENV naming convention change to avoid conflicts.
 
 ## [2.0.0] - 2025-12-01
 

@@ -1,3 +1,5 @@
+---@diagnostic disable: lowercase-global, undefined-global
+
 local keyMaxVisibleKeepsakes = "zannc-KeepsakeExtender-MaxVisibleKeepsakes"
 local keyScrollOffset = "zannc-KeepsakeExtender-ScrollOffset"
 local keyActiveEntries = "zannc-KeepsakeExtender-ActiveEntries"
@@ -23,8 +25,8 @@ function createScrollArrowData(x, isUpArrow)
 			end or function(...)
 				return KeepsakeScrollDown(...)
 			end,
-			ControlHotkeys = isUpArrow and {"MenuUp", "MenuLeft"} or {"MenuDown", "MenuRight"},
-			MouseControlHotkeys = isUpArrow and {"MenuUp", } or {"MenuDown", },
+			ControlHotkeys = isUpArrow and { "MenuUp", "MenuLeft" } or { "MenuDown", "MenuRight" },
+			MouseControlHotkeys = isUpArrow and { "MenuUp" } or { "MenuDown" },
 		},
 	}
 end
