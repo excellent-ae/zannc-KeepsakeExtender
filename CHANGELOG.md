@@ -1,6 +1,7 @@
 # Changelog
 
 ## [Unreleased]
+FIX: Issues where a name changes  and the keepsake becomes nil, it cant unequip, so we skip the unequip if theres no data.
 
 ## [2.0.1] - 2026-01-02
 

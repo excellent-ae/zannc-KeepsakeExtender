@@ -121,3 +121,21 @@ end
 '''
 match_indent = true
 times = 1
+
+# To hopefully patch out any issues where a name changes and the keepsake becomes nil, it cant unequip, so we skip the unequip if theres no data.
+[[patches]]
+[patches.pattern]
+target = "KeepsakeLogic.lua"
+pattern = '''
+args = args or {}
+local reAddTraitToUI = nil
+local unit = heroUnit or CurrentRun.Hero
+'''
+position = "before"
+payload = '''
+if not TraitData[traitName] then
+    return
+end
+'''
+match_indent = true
+times = 1
