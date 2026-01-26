@@ -7,7 +7,7 @@ local mods = rom.mods
 mods["LuaENVY-ENVY"].auto()
 
 rom = rom
-_PLUGIN = PLUGIN
+_PLUGIN = _PLUGIN
 
 ---@module 'SGG_Modding-Hades2GameDef-Globals'
 game = rom.game

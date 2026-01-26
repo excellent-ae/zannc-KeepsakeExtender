@@ -1,6 +1,7 @@
 # Changelog
 
 ## [Unreleased]
+- DEV: Change PLUGIN to _PLUGIN
 
 ## [2.0.2] - 2026-01-09
 
