@@ -1,7 +1,10 @@
 # Changelog
 
 ## [Unreleased]
-- DEV: Change PLUGIN to _PLUGIN
+
+## [2.0.3] - 2026-01-26
+
+- DEV: Change PLUGIN to \_PLUGIN
 
 ## [2.0.2] - 2026-01-09
 
@@ -34,7 +37,8 @@ DEV: Lovely ENV naming convention change to avoid conflicts.
 
 - Initial Release.
 
-[unreleased]: https://github.com/excellent-ae/zannc-KeepsakeExtender/compare/2.0.2...HEAD
+[unreleased]: https://github.com/excellent-ae/zannc-KeepsakeExtender/compare/2.0.3...HEAD
+[2.0.3]: https://github.com/excellent-ae/zannc-KeepsakeExtender/compare/2.0.2...2.0.3
 [2.0.2]: https://github.com/excellent-ae/zannc-KeepsakeExtender/compare/2.0.1...2.0.2
 [2.0.1]: https://github.com/excellent-ae/zannc-KeepsakeExtender/compare/2.0.0...2.0.1
 [2.0.0]: https://github.com/excellent-ae/zannc-KeepsakeExtender/compare/1.0.2...2.0.0
