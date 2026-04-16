@@ -72,6 +72,7 @@ pattern = '''
 			CreateKeepsakeIcon( screen, components, { Index = itemIndex, UpgradeData = itemData, X = localx, Y = localy } )
 		end
 	end
+	wait( 0.02 )
     '''
 position = "at"
 payload = '''
@@ -118,24 +119,27 @@ end
 if not foundKeepsake then
     while {{lovely:zanncKeepsakeExtenderEnv}}.KeepsakeScrollUp(screen, button) do end
 end
+wait(0.02)
+
 '''
 match_indent = true
 times = 1
 
 # To hopefully patch out any issues where a name changes and the keepsake becomes nil, it cant unequip, so we skip the unequip if theres no data.
-[[patches]]
-[patches.pattern]
-target = "KeepsakeLogic.lua"
-pattern = '''
-args = args or {}
-local reAddTraitToUI = nil
-local unit = heroUnit or CurrentRun.Hero
-'''
-position = "before"
-payload = '''
-if not TraitData[traitName] then
-    return
-end
-'''
-match_indent = true
-times = 1
+# No longer appears to be needed due to console patch release.
+# [[patches]]
+# [patches.pattern]
+# target = "KeepsakeLogic.lua"
+# pattern = '''
+# args = args or {}
+# local reAddTraitToUI = nil
+# local unit = heroUnit or CurrentRun.Hero
+# '''
+# position = "before"
+# payload = '''
+# if not TraitData[traitName] then
+#     return
+# end
+# '''
+# match_indent = true
+# times = 1

@@ -1,6 +1,7 @@
 # Changelog
 
 ## [Unreleased]
+- Fix: Update for latest H2 patch breaking lovely patch, not allowing for multiple keepsake rack pages.
 
 ## [2.0.3] - 2026-01-26
 
