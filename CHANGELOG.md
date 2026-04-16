@@ -1,6 +1,9 @@
 # Changelog
 
 ## [Unreleased]
+
+## [2.0.4] - 2026-04-16
+
 - Fix: Update for latest H2 patch breaking lovely patch, not allowing for multiple keepsake rack pages.
 
 ## [2.0.3] - 2026-01-26
@@ -38,7 +41,8 @@ DEV: Lovely ENV naming convention change to avoid conflicts.
 
 - Initial Release.
 
-[unreleased]: https://github.com/excellent-ae/zannc-KeepsakeExtender/compare/2.0.3...HEAD
+[unreleased]: https://github.com/excellent-ae/zannc-KeepsakeExtender/compare/2.0.4...HEAD
+[2.0.4]: https://github.com/excellent-ae/zannc-KeepsakeExtender/compare/2.0.3...2.0.4
 [2.0.3]: https://github.com/excellent-ae/zannc-KeepsakeExtender/compare/2.0.2...2.0.3
 [2.0.2]: https://github.com/excellent-ae/zannc-KeepsakeExtender/compare/2.0.1...2.0.2
 [2.0.1]: https://github.com/excellent-ae/zannc-KeepsakeExtender/compare/2.0.0...2.0.1
